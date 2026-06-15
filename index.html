@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enseignements Complémentaires — Inscription</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-eyebrow">Université — Enseignements complémentaires</div>
+      <h1 class="header-title">Inscription aux <em>Ateliers</em></h1>
+      <p class="header-sub">Choisissez exactement 2 ateliers parmi les 6 disponibles.</p>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Step 1: Student info -->
+    <section class="form-section" id="section-identity">
+      <div class="section-label">Étape 1 — Votre identité</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <label for="input-prenom">Prénom <span class="required">*</span></label>
+          <input type="text" id="input-prenom" placeholder="Votre prénom" autocomplete="given-name" />
+        </div>
+        <div class="field-group">
+          <label for="input-nom">Nom <span class="required">*</span></label>
+          <input type="text" id="input-nom" placeholder="Votre nom" autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:1rem;">
+        <label for="input-email">Email universitaire <span class="required">*</span></label>
+        <input type="email" id="input-email" placeholder="prenom.nom@univ.fr" autocomplete="email" />
+      </div>
+    </section>
+
+    <!-- Step 2: Atelier selection -->
+    <section class="form-section" id="section-ateliers">
+      <div class="section-label">Étape 2 — Choisissez vos 2 ateliers</div>
+      <div class="selection-counter" id="selection-counter">
+        <span class="counter-num" id="counter-num">0</span><span class="counter-slash">/2</span>
+        <span class="counter-label">ateliers sélectionnés</span>
+      </div>
+      <div class="ateliers-grid" id="ateliers-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="error-banner hidden" id="error-max">
+        ⚠ Vous avez déjà sélectionné 2 ateliers. Décochez-en un avant d'en choisir un autre.
+      </div>
+    </section>
+
+    <!-- Submit -->
+    <section class="form-section submit-section">
+      <button class="btn-submit" id="btn-submit" disabled>
+        Confirmer mon inscription
+      </button>
+      <p class="submit-hint">Les champs marqués <span class="required">*</span> sont obligatoires.</p>
+    </section>
+
+    <!-- Confirmation -->
+    <div class="confirmation-overlay hidden" id="confirmation-overlay">
+      <div class="confirmation-card">
+        <div class="confirm-icon">✓</div>
+        <h2>Inscription confirmée !</h2>
+        <p id="confirm-name"></p>
+        <ul id="confirm-ateliers"></ul>
+        <button class="btn-secondary" id="btn-new-inscription">Nouvelle inscription</button>
+        <a href="dashboard.html" class="btn-dashboard-link">Voir le tableau de bord →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <a href="dashboard.html" class="footer-link">Tableau de bord (administration) →</a>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, push, get, set, runTransaction }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { FIREBASE_CONFIG, ATELIERS } from "./config.js";
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getDatabase(app);
+
+    // ── State ──────────────────────────────────────────────────────────────
+    let selected = new Set();
+    let counts = {};   // { atelierKey: number }
+
+    // ── Render atelier cards ───────────────────────────────────────────────
+    const grid = document.getElementById("ateliers-grid");
+
+    function renderCards() {
+      grid.innerHTML = "";
+      ATELIERS.forEach(atelier => {
+        const count = counts[atelier.key] || 0;
+        const remaining = atelier.max - count;
+        const isFull = remaining <= 0;
+        const isSelected = selected.has(atelier.key);
+        const pct = Math.min(100, (count / atelier.max) * 100);
+
+        const card = document.createElement("label");
+        card.className = "atelier-card" +
+          (isFull ? " full" : "") +
+          (isSelected ? " selected" : "");
+        card.setAttribute("for", "cb-" + atelier.key);
+
+        card.innerHTML = `
+          <input type="checkbox" id="cb-${atelier.key}" value="${atelier.key}"
+            ${isSelected ? "checked" : ""}
+            ${isFull && !isSelected ? "disabled" : ""}
+            class="atelier-cb" />
+          <div class="card-inner">
+            <div class="card-code">A1</div>
+            <div class="card-name">${atelier.name}</div>
+            <div class="card-footer">
+              <div class="gauge-wrap">
+                <div class="gauge-bar" style="width:${pct}%"></div>
+              </div>
+              <div class="card-places ${isFull ? "full-label" : remaining <= 3 ? "low" : ""}">
+                ${isFull ? "Complet" : remaining + " place" + (remaining > 1 ? "s" : "") + " restante" + (remaining > 1 ? "s" : "")}
+              </div>
+            </div>
+          </div>`;
+
+        card.querySelector(".atelier-cb").addEventListener("change", handleCheck);
+        grid.appendChild(card);
+      });
+    }
+
+    function handleCheck(e) {
+      const key = e.target.value;
+      if (e.target.checked) {
+        if (selected.size >= 2) {
+          e.target.checked = false;
+          document.getElementById("error-max").classList.remove("hidden");
+          setTimeout(() => document.getElementById("error-max").classList.add("hidden"), 4000);
+          return;
+        }
+        selected.add(key);
+      } else {
+        selected.delete(key);
+        document.getElementById("error-max").classList.add("hidden");
+      }
+      updateCounter();
+      renderCards();
+      validateForm();
+    }
+
+    function updateCounter() {
+      const n = selected.size;
+      document.getElementById("counter-num").textContent = n;
+      document.getElementById("selection-counter").className =
+        "selection-counter" + (n === 2 ? " complete" : n === 1 ? " partial" : "");
+    }
+
+    // ── Form validation ────────────────────────────────────────────────────
+    function validateForm() {
+      const prenom = document.getElementById("input-prenom").value.trim();
+      const nom = document.getElementById("input-nom").value.trim();
+      const email = document.getElementById("input-email").value.trim();
+      const ok = prenom && nom && email && selected.size === 2;
+      document.getElementById("btn-submit").disabled = !ok;
+    }
+
+    ["input-prenom", "input-nom", "input-email"].forEach(id =>
+      document.getElementById(id).addEventListener("input", validateForm)
+    );
+
+    // ── Submit ─────────────────────────────────────────────────────────────
+    document.getElementById("btn-submit").addEventListener("click", async () => {
+      const prenom = document.getElementById("input-prenom").value.trim();
+      const nom = document.getElementById("input-nom").value.trim();
+      const email = document.getElementById("input-email").value.trim();
+      const choix = [...selected];
+
+      const btn = document.getElementById("btn-submit");
+      btn.disabled = true;
+      btn.textContent = "Inscription en cours…";
+
+      try {
+        // Verify capacity inside a transaction for each atelier
+        for (const key of choix) {
+          const countRef = ref(db, `counts/${key}`);
+          let over = false;
+          await runTransaction(countRef, current => {
+            const c = current || 0;
+            const atelier = ATELIERS.find(a => a.key === key);
+            if (c >= atelier.max) { over = true; return; }
+            return c + 1;
+          });
+          if (over) {
+            alert(`L'atelier "${ATELIERS.find(a=>a.key===key).name}" vient de se remplir. Veuillez en choisir un autre.`);
+            btn.disabled = false;
+            btn.textContent = "Confirmer mon inscription";
+            return;
+          }
+        }
+
+        // Save inscription
+        await push(ref(db, "inscriptions"), {
+          prenom, nom, email,
+          ateliers: choix,
+          timestamp: Date.now()
+        });
+
+        // Show confirmation
+        document.getElementById("confirm-name").textContent =
+          `${prenom} ${nom.toUpperCase()} (${email})`;
+        const ul = document.getElementById("confirm-ateliers");
+        ul.innerHTML = choix.map(k => {
+          const a = ATELIERS.find(x => x.key === k);
+          return `<li>${a.name}</li>`;
+        }).join("");
+        document.getElementById("confirmation-overlay").classList.remove("hidden");
+
+      } catch (err) {
+        alert("Erreur lors de l'inscription. Veuillez réessayer.");
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = "Confirmer mon inscription";
+      }
+    });
+
+    document.getElementById("btn-new-inscription").addEventListener("click", () => {
+      selected.clear();
+      document.getElementById("input-prenom").value = "";
+      document.getElementById("input-nom").value = "";
+      document.getElementById("input-email").value = "";
+      document.getElementById("confirmation-overlay").classList.add("hidden");
+      document.getElementById("btn-submit").textContent = "Confirmer mon inscription";
+      updateCounter();
+      renderCards();
+      validateForm();
+    });
+
+    // ── Real-time counts ───────────────────────────────────────────────────
+    onValue(ref(db, "counts"), snapshot => {
+      counts = snapshot.val() || {};
+      renderCards();
+    });
+
+    // Initial render
+    renderCards();
+    updateCounter();
+  </script>
+</body>
+</html>
