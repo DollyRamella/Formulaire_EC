@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connexion — Administration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="dashboard.css" />
+</head>
+<body class="dashboard-body">
+<header class="site-header compact">
+  <div class="header-inner">
+    <div class="header-eyebrow">Administration</div>
+    <h1 class="header-title">Connexion <em>admin</em></h1>
+  </div>
+</header>
+
+<main class="dashboard-main">
+  <section class="form-section" style="max-width:420px;margin:2rem auto;">
+    <div class="section-label">Authentification requise</div>
+    <div class="field-group">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" autocomplete="username" placeholder="admin@univ.fr" />
+    </div>
+    <div class="field-group" style="margin-top:1rem;">
+      <label for="login-password">Mot de passe</label>
+      <input type="password" id="login-password" autocomplete="current-password" />
+    </div>
+    <p class="error-banner" id="login-error" style="margin-top:1rem;display:none;">
+      ⚠ Identifiants incorrects.
+    </p>
+    <button class="btn-submit" id="btn-login" style="margin-top:1.5rem;">Se connecter</button>
+  </section>
+</main>
+
+<script type="module">
+import { login, auth } from "./auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// If already logged in, go straight to dashboard
+onAuthStateChanged(auth, (user) => {
+  if (user) window.location.replace("dashboard.html");
+});
+
+const btn = document.getElementById("btn-login");
+const errBox = document.getElementById("login-error");
+
+btn.addEventListener("click", async () => {
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  errBox.style.display = "none";
+  btn.disabled = true;
+  btn.textContent = "Connexion…";
+  try {
+    await login(email, password);
+    window.location.replace("dashboard.html");
+  } catch (err) {
+    console.error(err);
+    errBox.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Se connecter";
+  }
+});
+
+document.getElementById("login-password").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") btn.click();
+});
+</script>
+</body>
+</html>
