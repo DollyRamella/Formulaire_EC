@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord — Enseignements Complémentaires</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body class="dashboard-body">
+  <header class="site-header compact">
+    <div class="header-inner">
+      <div class="header-eyebrow">Administration</div>
+      <h1 class="header-title">Tableau de <em>bord</em></h1>
+      <a href="index.html" class="header-back">← Formulaire d'inscription</a>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+
+    <!-- Summary cards -->
+    <section class="dash-summary" id="dash-summary">
+      <div class="summary-card" id="summary-total">
+        <div class="summary-num" id="total-inscrits">—</div>
+        <div class="summary-label">inscrits au total</div>
+      </div>
+      <div class="summary-card" id="summary-ateliers-full">
+        <div class="summary-num" id="total-full">—</div>
+        <div class="summary-label">ateliers complets</div>
+      </div>
+      <div class="summary-card" id="summary-places">
+        <div class="summary-num" id="total-places">—</div>
+        <div class="summary-label">places restantes</div>
+      </div>
+    </section>
+
+    <!-- Export controls -->
+    <section class="dash-exports">
+      <h2 class="dash-section-title">Exports</h2>
+      <div class="export-buttons">
+        <button class="btn-export" id="btn-export-all">
+          ⬇ Exporter tous les inscrits (CSV)
+        </button>
+        <div class="export-sep">ou par atelier :</div>
+        <div class="export-atelier-btns" id="export-atelier-btns">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Per-atelier tables -->
+    <section class="dash-tables">
+      <h2 class="dash-section-title">Liste par atelier</h2>
+      <div id="atelier-tables-wrap">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { FIREBASE_CONFIG, ATELIERS } from "./config.js";
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getDatabase(app);
+
+    let allInscriptions = [];   // raw array of {prenom, nom, email, ateliers, timestamp}
+    let counts = {};
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function fmtDate(ts) {
+      if (!ts) return "";
+      return new Date(ts).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function toCSV(rows, headers) {
+      const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+      return [headers.map(escape).join(";"),
+        ...rows.map(r => r.map(escape).join(";"))
+      ].join("\n");
+    }
+
+    function downloadCSV(content, filename) {
+      const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    function render() {
+      // Summary
+      document.getElementById("total-inscrits").textContent = allInscriptions.length;
+      const fullCount = ATELIERS.filter(a => (counts[a.key] || 0) >= a.max).length;
+      document.getElementById("total-full").textContent = fullCount;
+      const placesLeft = ATELIERS.reduce((acc, a) => acc + Math.max(0, a.max - (counts[a.key] || 0)), 0);
+      document.getElementById("total-places").textContent = placesLeft;
+
+      // Per-atelier export buttons
+      const btnWrap = document.getElementById("export-atelier-btns");
+      btnWrap.innerHTML = "";
+      ATELIERS.forEach(atelier => {
+        const btn = document.createElement("button");
+        btn.className = "btn-export-sm";
+        btn.textContent = atelier.name;
+        btn.addEventListener("click", () => exportAtelier(atelier));
+        btnWrap.appendChild(btn);
+      });
+
+      // Per-atelier tables
+      const wrap = document.getElementById("atelier-tables-wrap");
+      wrap.innerHTML = "";
+      ATELIERS.forEach(atelier => {
+        const inscrits = allInscriptions
+          .filter(i => i.ateliers && i.ateliers.includes(atelier.key))
+          .sort((a, b) => a.nom.localeCompare(b.nom));
+        const c = counts[atelier.key] || 0;
+        const isFull = c >= atelier.max;
+        const pct = Math.min(100, (c / atelier.max) * 100);
+
+        const section = document.createElement("div");
+        section.className = "atelier-table-section";
+        section.innerHTML = `
+          <div class="atelier-table-header">
+            <div>
+              <span class="atelier-table-code">A1</span>
+              <span class="atelier-table-name">${atelier.name}</span>
+              ${isFull ? '<span class="badge-full">Complet</span>' : ''}
+            </div>
+            <div class="atelier-table-stats">
+              <div class="gauge-wrap narrow">
+                <div class="gauge-bar" style="width:${pct}%"></div>
+              </div>
+              <span class="atelier-table-count">${c} / ${atelier.max}</span>
+            </div>
+          </div>
+          ${inscrits.length === 0
+            ? '<p class="empty-table">Aucun inscrit pour le moment.</p>'
+            : `<table class="inscrit-table">
+                <thead><tr>
+                  <th>#</th><th>Nom</th><th>Prénom</th><th>Email</th><th>Date d'inscription</th>
+                </tr></thead>
+                <tbody>${inscrits.map((i, idx) => `
+                  <tr>
+                    <td class="cell-num">${idx + 1}</td>
+                    <td class="cell-nom">${i.nom.toUpperCase()}</td>
+                    <td>${i.prenom}</td>
+                    <td class="cell-email">${i.email}</td>
+                    <td class="cell-date">${fmtDate(i.timestamp)}</td>
+                  </tr>`).join("")}
+                </tbody>
+              </table>`
+          }`;
+        wrap.appendChild(section);
+      });
+    }
+
+    // ── Exports ────────────────────────────────────────────────────────────
+    document.getElementById("btn-export-all").addEventListener("click", () => {
+      const rows = allInscriptions
+        .sort((a, b) => a.nom.localeCompare(b.nom))
+        .map(i => [
+          i.nom.toUpperCase(),
+          i.prenom,
+          i.email,
+          (i.ateliers || []).map(k => ATELIERS.find(a => a.key === k)?.name || k).join(" | "),
+          fmtDate(i.timestamp)
+        ]);
+      const csv = toCSV(rows, ["Nom", "Prénom", "Email", "Ateliers choisis", "Date d'inscription"]);
+      downloadCSV(csv, "inscrits-tous-ateliers.csv");
+    });
+
+    function exportAtelier(atelier) {
+      const inscrits = allInscriptions
+        .filter(i => i.ateliers && i.ateliers.includes(atelier.key))
+        .sort((a, b) => a.nom.localeCompare(b.nom));
+      const rows = inscrits.map((i, idx) => [
+        String(idx + 1),
+        i.nom.toUpperCase(),
+        i.prenom,
+        i.email,
+        fmtDate(i.timestamp)
+      ]);
+      const csv = toCSV(rows, ["#", "Nom", "Prénom", "Email", "Date d'inscription"]);
+      downloadCSV(csv, `inscrits-${atelier.key}.csv`);
+    }
+
+    // ── Real-time data ─────────────────────────────────────────────────────
+    onValue(ref(db, "inscriptions"), snap => {
+      const val = snap.val() || {};
+      allInscriptions = Object.values(val);
+      render();
+    });
+
+    onValue(ref(db, "counts"), snap => {
+      counts = snap.val() || {};
+      render();
+    });
+  </script>
+</body>
+</html>
