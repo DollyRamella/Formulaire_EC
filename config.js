@@ -8,14 +8,14 @@
 // 4. Déployez sur GitHub Pages (voir README.md).
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const FIREBASE_CONFIG = {
-  apiKey:            "VOTRE_API_KEY",
-  authDomain:        "VOTRE_PROJECT.firebaseapp.com",
-  databaseURL:       "https://VOTRE_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:         "VOTRE_PROJECT",
-  storageBucket:     "VOTRE_PROJECT.appspot.com",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId:             "VOTRE_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyAxAQD7K_-bLfgnv859UZqC0CROtYJyIFY",
+  authDomain: "ateliers-inscriptions.firebaseapp.com",
+  databaseURL: "https://ateliers-inscriptions-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ateliers-inscriptions",
+  storageBucket: "ateliers-inscriptions.firebasestorage.app",
+  messagingSenderId: "308148803648",
+  appId: "1:308148803648:web:9955aef6560b8d6da827a5"
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
