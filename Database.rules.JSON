@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "counts": {
+      ".read": true,
+      ".write": true,
+      "$atelierKey": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    },
+    "inscriptions": {
+      ".read": "auth != null",
+      ".write": true,
+      "$inscriptionId": {
+        ".validate": "newData.hasChildren(['prenom','nom','email','ateliers','timestamp'])",
+        "prenom":    { ".validate": "newData.isString() && newData.val().length > 0" },
+        "nom":       { ".validate": "newData.isString() && newData.val().length > 0" },
+        "email":     { ".validate": "newData.isString() && newData.val().matches(/^[^@]+@[^@]+\\..+$/)" },
+        "ateliers":  { ".validate": "newData.hasChildren()" },
+        "timestamp": { ".validate": "newData.isNumber()" }
+      }
+    }
+  }
+}
