@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Enseignements Complémentaires — Inscription</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enseignements Complémentaires — Inscription</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
 <header class="site-header">
   <div class="header-inner">
     <div class="header-eyebrow">Nantes Université — Enseignements complémentaires</div>
-    <h1 class="header-title">Inscription aux <em>Enseignements complémentaires A1 </em></h1>
+    <h1 class="header-title">Inscription aux <em>Enseignements complémentaires A1</em></h1>
     <p class="header-sub">Choisissez exactement 2 ateliers parmi les 6 disponibles.</p>
   </div>
 </header>
 
 <main class="main-content">
 
-  <!-- Step 1: Student info -->
+  <!-- Étape 1 : Identité -->
   <section class="form-section" id="section-identity">
     <div class="section-label">Étape 1 — Votre identité</div>
     <div class="fields-row">
@@ -40,7 +40,7 @@
     </div>
   </section>
 
-  <!-- Step 2: Atelier selection -->
+  <!-- Étape 2 : Choix des ateliers -->
   <section class="form-section" id="section-ateliers">
     <div class="section-label">Étape 2 — Choisissez vos 2 ateliers</div>
     <div class="selection-counter" id="selection-counter">
@@ -48,14 +48,14 @@
       <span class="counter-label">ateliers sélectionnés</span>
     </div>
     <div class="ateliers-grid" id="ateliers-grid">
-      <!-- Populated by JS -->
+      <!-- Rempli par JS -->
     </div>
     <div class="error-banner hidden" id="error-max">
       ⚠ Vous avez déjà sélectionné 2 ateliers. Décochez-en un avant d'en choisir un autre.
     </div>
   </section>
 
-  <!-- Submit -->
+  <!-- Soumission -->
   <section class="form-section submit-section">
     <button class="btn-submit" id="btn-submit" disabled>
       Confirmer mon inscription
@@ -71,87 +71,48 @@
       <p id="confirm-name"></p>
       <ul id="confirm-ateliers"></ul>
       <button class="btn-secondary" id="btn-new-inscription">Nouvelle inscription</button>
-      <a href="dashboard.html" class="btn-dashboard-link">Voir le tableau de bord →</a>
     </div>
   </div>
 
 </main>
 
 <footer class="site-footer">
-  <a href="dashboard.html" class="footer-link">Tableau de bord (administration) →</a>
+  <a href="login.html" class="footer-link">Tableau de bord (administration) →</a>
 </footer>
 
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, onValue, push, runTransaction }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { FIREBASE_CONFIG, ATELIERS } from "./config.js";
 
- 
-  let FIREBASE_CONFIG;
-  let db;
-  let firebaseAvailable = false;
+  // ── Init Firebase ──────────────────────────────────────────────────────
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getDatabase(app);
 
-  try {
-    // Tentative d'import de la config Firebase depuis config.js
-    const configModule = await import("./config.js");
-    FIREBASE_CONFIG = configModule.FIREBASE_CONFIG;
-
-    // ── Liste des 6 ateliers ────────────────────────────────────────────
-    // Si config.js exporte ATELIERS, on les utilise. Sinon on utilise les
-    // valeurs par défaut ci-dessous.
-    window._ATELIERS = configModule.ATELIERS && configModule.ATELIERS.length > 0
-      ? configModule.ATELIERS
-      : getDefaultAteliers();
-
-    const app = initializeApp(FIREBASE_CONFIG);
-    db = getDatabase(app);
-    firebaseAvailable = true;
-  } catch (e) {
-    console.warn("config.js introuvable ou Firebase non configuré. Mode démo activé.", e);
-    window._ATELIERS = getDefaultAteliers();
-  }
-
-  // ── Ateliers par défaut (5 ateliers) ───────────────────────────────────
-  // Ces ateliers sont affichés si config.js ne fournit pas de liste,
-  // ou si la liste de config.js est vide.
-  function getDefaultAteliers() {
-    return [
-      { key: "A1", name: "D'une langue à l'autre",       max: 20 },
-      { key: "A2", name: "De la lecture à l'écriture",         max: 20 },
-      { key: "A3", name: "Images et paroles",     max: 20 },
-      { key: "A4", name: "Culture et gastronomie",         max: 20 },
-      { key: "A5", name: "Expression vocale et corporelle",        max: 20 },
-      
-    ];
-  }
-
-  const ATELIERS = window._ATELIERS;
-
-  // ── State ──────────────────────────────────────────────────────────────
+  // ── État ───────────────────────────────────────────────────────────────
   let selected = new Set();
-  let counts = {};   // { atelierKey: number }
+  let counts   = {};   // { atelierKey: number }
 
-  // ── Render atelier cards ───────────────────────────────────────────────
+  // ── Rendu des cartes ateliers ──────────────────────────────────────────
   const grid = document.getElementById("ateliers-grid");
 
   function renderCards() {
     grid.innerHTML = "";
 
     ATELIERS.forEach(atelier => {
-      const count     = counts[atelier.key] || 0;
-      const remaining = atelier.max - count;
-      const isFull    = remaining <= 0;
+      const count      = counts[atelier.key] || 0;
+      const remaining  = atelier.max - count;
+      const isFull     = remaining <= 0;
       const isSelected = selected.has(atelier.key);
-      const pct       = Math.min(100, (count / atelier.max) * 100);
+      const pct        = Math.min(100, (count / atelier.max) * 100);
 
       const card = document.createElement("label");
       card.className = "atelier-card" +
-        (isFull      ? " full"     : "") +
-        (isSelected  ? " selected" : "");
+        (isFull     ? " full"     : "") +
+        (isSelected ? " selected" : "");
       card.setAttribute("for", "cb-" + atelier.key);
 
-      // CORRECTION : utilisation de atelier.key au lieu de "A1" hardcodé
       card.innerHTML = `
         <input type="checkbox" id="cb-${atelier.key}" value="${atelier.key}"
           ${isSelected ? "checked" : ""}
@@ -183,8 +144,9 @@
     if (e.target.checked) {
       if (selected.size >= 2) {
         e.target.checked = false;
-        document.getElementById("error-max").classList.remove("hidden");
-        setTimeout(() => document.getElementById("error-max").classList.add("hidden"), 4000);
+        const errEl = document.getElementById("error-max");
+        errEl.classList.remove("hidden");
+        setTimeout(() => errEl.classList.add("hidden"), 4000);
         return;
       }
       selected.add(key);
@@ -204,7 +166,7 @@
       "selection-counter" + (n === 2 ? " complete" : n === 1 ? " partial" : "");
   }
 
-  // ── Form validation ────────────────────────────────────────────────────
+  // ── Validation du formulaire ───────────────────────────────────────────
   function validateForm() {
     const prenom = document.getElementById("input-prenom").value.trim();
     const nom    = document.getElementById("input-nom").value.trim();
@@ -217,7 +179,7 @@
     document.getElementById(id).addEventListener("input", validateForm)
   );
 
-  // ── Submit ─────────────────────────────────────────────────────────────
+  // ── Soumission ─────────────────────────────────────────────────────────
   document.getElementById("btn-submit").addEventListener("click", async () => {
     const prenom = document.getElementById("input-prenom").value.trim();
     const nom    = document.getElementById("input-nom").value.trim();
@@ -225,40 +187,40 @@
     const choix  = [...selected];
 
     const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = "Inscription en cours…";
 
     try {
-      if (firebaseAvailable) {
-        // Vérification de la capacité en transaction pour chaque atelier
-        for (const key of choix) {
-          const countRef = ref(db, `counts/${key}`);
-          let over = false;
-          await runTransaction(countRef, current => {
-            const c = current || 0;
-            const atelier = ATELIERS.find(a => a.key === key);
-            if (c >= atelier.max) { over = true; return; }
-            return c + 1;
-          });
-          if (over) {
-            alert(`L'atelier "${ATELIERS.find(a => a.key === key).name}" vient de se remplir. Veuillez en choisir un autre.`);
-            btn.disabled = false;
-            btn.textContent = "Confirmer mon inscription";
-            return;
-          }
-        }
-        // Sauvegarde de l'inscription
-        await push(ref(db, "inscriptions"), {
-          prenom, nom, email,
-          ateliers: choix,
-          timestamp: Date.now()
+      // 1) Incrémenter les compteurs via transaction (vérifie la capacité)
+      for (const key of choix) {
+        const countRef  = ref(db, `counts/${key}`);
+        const atelier   = ATELIERS.find(a => a.key === key);
+        let placeFull   = false;
+
+        await runTransaction(countRef, current => {
+          const c = current || 0;
+          if (c >= atelier.max) { placeFull = true; return; /* abort */ }
+          return c + 1;
         });
-      } else {
-        // Mode démo : simulation sans Firebase
-        await new Promise(r => setTimeout(r, 800));
+
+        if (placeFull) {
+          alert(`L'atelier "${atelier.name}" vient de se remplir. Veuillez en choisir un autre.`);
+          btn.disabled    = false;
+          btn.textContent = "Confirmer mon inscription";
+          return;
+        }
       }
 
-      // Affichage de la confirmation
+      // 2) Sauvegarder l'inscription
+      await push(ref(db, "inscriptions"), {
+        prenom,
+        nom,
+        email,
+        ateliers: choix,
+        timestamp: Date.now()
+      });
+
+      // 3) Afficher la confirmation
       document.getElementById("confirm-name").textContent =
         `${prenom} ${nom.toUpperCase()} (${email})`;
       const ul = document.getElementById("confirm-ateliers");
@@ -269,13 +231,18 @@
       document.getElementById("confirmation-overlay").classList.remove("hidden");
 
     } catch (err) {
-      alert("Erreur lors de l'inscription. Veuillez réessayer.");
-      console.error(err);
-      btn.disabled = false;
+      console.error("Erreur inscription :", err);
+      if (err.code === "PERMISSION_DENIED") {
+        alert("Erreur : accès refusé par la base de données. Contactez l'administrateur.");
+      } else {
+        alert("Erreur lors de l'inscription. Veuillez réessayer.");
+      }
+      btn.disabled    = false;
       btn.textContent = "Confirmer mon inscription";
     }
   });
 
+  // ── Nouvelle inscription ───────────────────────────────────────────────
   document.getElementById("btn-new-inscription").addEventListener("click", () => {
     selected.clear();
     document.getElementById("input-prenom").value = "";
@@ -288,13 +255,13 @@
     validateForm();
   });
 
-  // ── Compteurs en temps réel (Firebase) ────────────────────────────────
-  if (firebaseAvailable) {
-    onValue(ref(db, "counts"), snapshot => {
-      counts = snapshot.val() || {};
-      renderCards();
-    });
-  }
+  // ── Compteurs temps réel depuis Firebase ───────────────────────────────
+  onValue(ref(db, "counts"), snapshot => {
+    counts = snapshot.val() || {};
+    renderCards();
+  }, err => {
+    console.error("Erreur lecture counts :", err);
+  });
 
   // ── Rendu initial ──────────────────────────────────────────────────────
   renderCards();
