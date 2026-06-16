@@ -1,5 +1,6 @@
-// auth.js — gestion centralisée de l'authentification admin (Firebase Auth)
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// auth.js — authentification admin (Firebase Auth)
+import { initializeApp, getApps, getApp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -12,8 +13,9 @@ const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
 export const auth = getAuth(app);
 
 /**
- * Protège une page : redirige vers login.html si l'utilisateur
- * n'est pas authentifié. Résout avec l'utilisateur sinon.
+ * Protège une page admin : redirige vers login.html
+ * si l'utilisateur n'est pas authentifié.
+ * Résout avec l'objet user si authentifié.
  */
 export function requireAuth() {
   return new Promise((resolve) => {
