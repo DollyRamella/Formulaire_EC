@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enseignements Complémentaires — Inscription</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enseignements Complémentaires — Inscription</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
 <header class="site-header">
   <div class="header-inner">
-    <div class="header-eyebrow">Nantes Université — Enseignements complémentaires</div>
-    <h1 class="header-title">Inscription aux <em>Enseignements complémentaires A1</em></h1>
+    <div class="header-eyebrow">Université — Enseignements complémentaires</div>
+    <h1 class="header-title">Inscription aux <em>Ateliers</em></h1>
     <p class="header-sub">Choisissez exactement 2 ateliers parmi les 6 disponibles.</p>
   </div>
 </header>
 
 <main class="main-content">
 
-  <!-- Étape 1 : Identité -->
+  <!-- Step 1: Student info -->
   <section class="form-section" id="section-identity">
     <div class="section-label">Étape 1 — Votre identité</div>
     <div class="fields-row">
@@ -35,12 +35,16 @@
       </div>
     </div>
     <div class="field-group" style="margin-top:1rem;">
-      <label for="input-email">Email <span class="required">*</span></label>
+      <label for="input-email">Email universitaire <span class="required">*</span></label>
       <input type="email" id="input-email" placeholder="prenom.nom@univ.fr" autocomplete="email" />
+      <!-- Message d'erreur email doublon -->
+      <div class="field-error hidden" id="error-email-doublon">
+        ⚠ Cette adresse email est déjà inscrite.
+      </div>
     </div>
   </section>
 
-  <!-- Étape 2 : Choix des ateliers -->
+  <!-- Step 2: Atelier selection -->
   <section class="form-section" id="section-ateliers">
     <div class="section-label">Étape 2 — Choisissez vos 2 ateliers</div>
     <div class="selection-counter" id="selection-counter">
@@ -48,14 +52,14 @@
       <span class="counter-label">ateliers sélectionnés</span>
     </div>
     <div class="ateliers-grid" id="ateliers-grid">
-      <!-- Rempli par JS -->
+      <!-- Populated by JS -->
     </div>
     <div class="error-banner hidden" id="error-max">
       ⚠ Vous avez déjà sélectionné 2 ateliers. Décochez-en un avant d'en choisir un autre.
     </div>
   </section>
 
-  <!-- Soumission -->
+  <!-- Submit -->
   <section class="form-section submit-section">
     <button class="btn-submit" id="btn-submit" disabled>
       Confirmer mon inscription
@@ -71,30 +75,85 @@
       <p id="confirm-name"></p>
       <ul id="confirm-ateliers"></ul>
       <button class="btn-secondary" id="btn-new-inscription">Nouvelle inscription</button>
+      <a href="dashboard.html" class="btn-dashboard-link">Voir le tableau de bord →</a>
     </div>
   </div>
 
 </main>
 
 <footer class="site-footer">
-  <a href="login.html" class="footer-link">Tableau de bord (administration) →</a>
+  <a href="dashboard.html" class="footer-link">Tableau de bord (administration) →</a>
 </footer>
 
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, onValue, push, runTransaction }
+  import { getDatabase, ref, onValue, push, runTransaction, get, query, orderByChild, equalTo }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-  import { FIREBASE_CONFIG, ATELIERS } from "./config.js";
 
-  // ── Init Firebase ──────────────────────────────────────────────────────
-  const app = initializeApp(FIREBASE_CONFIG);
-  const db  = getDatabase(app);
+  // ── Configuration ──────────────────────────────────────────────────────
+  let FIREBASE_CONFIG;
+  let db;
+  let firebaseAvailable = false;
 
-  // ── État ───────────────────────────────────────────────────────────────
+  try {
+    const configModule = await import("./config.js");
+    FIREBASE_CONFIG = configModule.FIREBASE_CONFIG;
+
+    window._ATELIERS = configModule.ATELIERS && configModule.ATELIERS.length > 0
+      ? configModule.ATELIERS
+      : getDefaultAteliers();
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    db = getDatabase(app);
+    firebaseAvailable = true;
+  } catch (e) {
+    console.warn("config.js introuvable ou Firebase non configuré. Mode démo activé.", e);
+    window._ATELIERS = getDefaultAteliers();
+  }
+
+  function getDefaultAteliers() {
+    return [
+      { key: "A1", name: "Atelier Écriture créative",   max: 20 },
+      { key: "A2", name: "Atelier Prise de parole",     max: 20 },
+      { key: "A3", name: "Atelier Numérique & société", max: 20 },
+      { key: "A4", name: "Atelier Pensée critique",     max: 20 },
+      { key: "A5", name: "Atelier Langues du monde",    max: 20 },
+      { key: "A6", name: "Atelier Arts & expression",   max: 20 },
+    ];
+  }
+
+  const ATELIERS = window._ATELIERS;
+
+  // ── State ──────────────────────────────────────────────────────────────
   let selected = new Set();
-  let counts   = {};   // { atelierKey: number }
+  let counts   = {};    // { atelierKey: number }
+  // Emails déjà inscrits, récupérés en temps réel depuis Firebase
+  const knownEmails = new Set();
 
-  // ── Rendu des cartes ateliers ──────────────────────────────────────────
+  // ── Vérification email doublon (temps réel) ───────────────────────────
+  // On maintient un Set local à partir de la liste des inscriptions
+  if (firebaseAvailable) {
+    onValue(ref(db, "inscriptions"), snapshot => {
+      knownEmails.clear();
+      snapshot.forEach(child => {
+        const email = child.val().email;
+        if (email) knownEmails.add(email.toLowerCase().trim());
+      });
+      // Re-valider le formulaire si l'email déjà saisi devient doublon
+      validateForm();
+    });
+  }
+
+  // ── Compteurs en temps réel (Firebase) ────────────────────────────────
+  if (firebaseAvailable) {
+    onValue(ref(db, "counts"), snapshot => {
+      counts = snapshot.val() || {};
+      renderCards();
+    });
+  }
+
+  // ── Render atelier cards ───────────────────────────────────────────────
   const grid = document.getElementById("ateliers-grid");
 
   function renderCards() {
@@ -102,8 +161,7 @@
 
     ATELIERS.forEach(atelier => {
       const count      = counts[atelier.key] || 0;
-      const remaining  = atelier.max - count;
-      const isFull     = remaining <= 0;
+      const isFull     = count >= atelier.max;
       const isSelected = selected.has(atelier.key);
       const pct        = Math.min(100, (count / atelier.max) * 100);
 
@@ -125,11 +183,8 @@
             <div class="gauge-wrap">
               <div class="gauge-bar" style="width:${pct}%"></div>
             </div>
-            <div class="card-places ${isFull ? "full-label" : remaining <= 3 ? "low" : ""}">
-              ${isFull
-                ? "Complet"
-                : remaining + " place" + (remaining > 1 ? "s" : "") +
-                  " restante" + (remaining > 1 ? "s" : "")}
+            <div class="card-places ${isFull ? "full-label" : count / atelier.max >= 0.8 ? "low" : ""}">
+              ${isFull ? "Complet" : ""}
             </div>
           </div>
         </div>`;
@@ -144,9 +199,8 @@
     if (e.target.checked) {
       if (selected.size >= 2) {
         e.target.checked = false;
-        const errEl = document.getElementById("error-max");
-        errEl.classList.remove("hidden");
-        setTimeout(() => errEl.classList.add("hidden"), 4000);
+        document.getElementById("error-max").classList.remove("hidden");
+        setTimeout(() => document.getElementById("error-max").classList.add("hidden"), 4000);
         return;
       }
       selected.add(key);
@@ -166,61 +220,98 @@
       "selection-counter" + (n === 2 ? " complete" : n === 1 ? " partial" : "");
   }
 
-  // ── Validation du formulaire ───────────────────────────────────────────
+  // ── Form validation ────────────────────────────────────────────────────
+  // Retourne true si le formulaire est complet ET valide
   function validateForm() {
     const prenom = document.getElementById("input-prenom").value.trim();
     const nom    = document.getElementById("input-nom").value.trim();
-    const email  = document.getElementById("input-email").value.trim();
-    const ok = prenom && nom && email && selected.size === 2;
+    const email  = document.getElementById("input-email").value.trim().toLowerCase();
+
+    const emailSaisi   = email.length > 0;
+    const isDoublon    = emailSaisi && knownEmails.has(email);
+    const errEl        = document.getElementById("error-email-doublon");
+
+    if (isDoublon) {
+      errEl.classList.remove("hidden");
+    } else {
+      errEl.classList.add("hidden");
+    }
+
+    const ok = prenom && nom && email && !isDoublon && selected.size === 2;
     document.getElementById("btn-submit").disabled = !ok;
+    return ok;
   }
 
   ["input-prenom", "input-nom", "input-email"].forEach(id =>
     document.getElementById(id).addEventListener("input", validateForm)
   );
 
-  // ── Soumission ─────────────────────────────────────────────────────────
+  // ── Submit ─────────────────────────────────────────────────────────────
   document.getElementById("btn-submit").addEventListener("click", async () => {
+    if (!validateForm()) return;
+
     const prenom = document.getElementById("input-prenom").value.trim();
     const nom    = document.getElementById("input-nom").value.trim();
-    const email  = document.getElementById("input-email").value.trim();
+    const email  = document.getElementById("input-email").value.trim().toLowerCase();
     const choix  = [...selected];
 
     const btn = document.getElementById("btn-submit");
-    btn.disabled    = true;
+    btn.disabled = true;
     btn.textContent = "Inscription en cours…";
 
     try {
-      // 1) Incrémenter les compteurs via transaction (vérifie la capacité)
-      for (const key of choix) {
-        const countRef  = ref(db, `counts/${key}`);
-        const atelier   = ATELIERS.find(a => a.key === key);
-        let placeFull   = false;
+      if (firebaseAvailable) {
 
-        await runTransaction(countRef, current => {
-          const c = current || 0;
-          if (c >= atelier.max) { placeFull = true; return; /* abort */ }
-          return c + 1;
-        });
-
-        if (placeFull) {
-          alert(`L'atelier "${atelier.name}" vient de se remplir. Veuillez en choisir un autre.`);
-          btn.disabled    = false;
+        // ── 1. Vérification doublon email (côté serveur, pour sécurité) ──
+        // On requête Firebase pour s'assurer que l'email n'a pas été inscrit
+        // entre le chargement de la page et le clic sur "Confirmer"
+        const emailQuery = query(
+          ref(db, "inscriptions"),
+          orderByChild("email"),
+          equalTo(email)
+        );
+        const snap = await get(emailQuery);
+        if (snap.exists()) {
+          document.getElementById("error-email-doublon").classList.remove("hidden");
+          knownEmails.add(email);
+          validateForm();
           btn.textContent = "Confirmer mon inscription";
           return;
         }
+
+        // ── 2. Vérification & décrémentation des places (transaction) ────
+        for (const key of choix) {
+          const countRef = ref(db, `counts/${key}`);
+          let over = false;
+          await runTransaction(countRef, current => {
+            const c = current || 0;
+            const atelier = ATELIERS.find(a => a.key === key);
+            if (c >= atelier.max) { over = true; return; }
+            return c + 1;
+          });
+          if (over) {
+            alert(`L'atelier "${ATELIERS.find(a => a.key === key).name}" vient de se remplir. Veuillez en choisir un autre.`);
+            btn.disabled = false;
+            btn.textContent = "Confirmer mon inscription";
+            return;
+          }
+        }
+
+        // ── 3. Sauvegarde de l'inscription ───────────────────────────────
+        await push(ref(db, "inscriptions"), {
+          prenom, nom, email,
+          ateliers: choix,
+          timestamp: Date.now()
+        });
+
+      } else {
+        // Mode démo : simulation sans Firebase
+        await new Promise(r => setTimeout(r, 800));
+        // Simule le doublon en mémoire locale
+        knownEmails.add(email);
       }
 
-      // 2) Sauvegarder l'inscription
-      await push(ref(db, "inscriptions"), {
-        prenom,
-        nom,
-        email,
-        ateliers: choix,
-        timestamp: Date.now()
-      });
-
-      // 3) Afficher la confirmation
+      // ── 4. Confirmation ───────────────────────────────────────────────
       document.getElementById("confirm-name").textContent =
         `${prenom} ${nom.toUpperCase()} (${email})`;
       const ul = document.getElementById("confirm-ateliers");
@@ -231,36 +322,24 @@
       document.getElementById("confirmation-overlay").classList.remove("hidden");
 
     } catch (err) {
-      console.error("Erreur inscription :", err);
-      if (err.code === "PERMISSION_DENIED") {
-        alert("Erreur : accès refusé par la base de données. Contactez l'administrateur.");
-      } else {
-        alert("Erreur lors de l'inscription. Veuillez réessayer.");
-      }
-      btn.disabled    = false;
+      alert("Erreur lors de l'inscription. Veuillez réessayer.");
+      console.error(err);
+      btn.disabled = false;
       btn.textContent = "Confirmer mon inscription";
     }
   });
 
-  // ── Nouvelle inscription ───────────────────────────────────────────────
   document.getElementById("btn-new-inscription").addEventListener("click", () => {
     selected.clear();
     document.getElementById("input-prenom").value = "";
     document.getElementById("input-nom").value    = "";
     document.getElementById("input-email").value  = "";
+    document.getElementById("error-email-doublon").classList.add("hidden");
     document.getElementById("confirmation-overlay").classList.add("hidden");
     document.getElementById("btn-submit").textContent = "Confirmer mon inscription";
     updateCounter();
     renderCards();
     validateForm();
-  });
-
-  // ── Compteurs temps réel depuis Firebase ───────────────────────────────
-  onValue(ref(db, "counts"), snapshot => {
-    counts = snapshot.val() || {};
-    renderCards();
-  }, err => {
-    console.error("Erreur lecture counts :", err);
   });
 
   // ── Rendu initial ──────────────────────────────────────────────────────
