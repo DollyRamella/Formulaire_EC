@@ -18,9 +18,7 @@ export const FIREBASE_CONFIG = {
 // ─────────────────────────────────────────────────────────────────────────────
 export const ATELIERS = [
   { key: "culture-gastronomie",  name: "Culture et Gastronomie",          max: 15 },
-  { key: "une-langue-a-lautre",  name: "D'une langue à l'autre",          max: 15 },
   { key: "lecture-ecriture",     name: "De la lecture à l'écriture",      max: 15 },
-  { key: "expression-vocale",    name: "Expression vocale et corporelle",  max: 15 },
   { key: "images-et-paroles",    name: "Images et paroles",               max: 15 },
-  { key: "poesie-et-chanson",    name: "Poésie et chanson",               max: 15 },
+
 ];
