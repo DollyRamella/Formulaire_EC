@@ -20,5 +20,4 @@ export const ATELIERS = [
   { key: "culture-gastronomie",  name: "Culture et Gastronomie",          max: 15 },
   { key: "lecture-ecriture",     name: "De la lecture à l'écriture",      max: 15 },
   { key: "images-et-paroles",    name: "Images et paroles",               max: 15 },
-
 ];
