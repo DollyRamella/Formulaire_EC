@@ -290,7 +290,7 @@
             return c + 1;
           });
           if (over) {
-            alert(`L'atelier "${ATELIERS.find(a => a.key === key).name}" vient de se remplir. Veuillez en choisir un autre.`);
+            alert(`L'atelier "${ATELIERS.find(a => a.key === key).name}" est complet. Sélectionnez un autre EC.`);
             btn.disabled = false;
             btn.textContent = "Confirmer mon inscription";
             return;
