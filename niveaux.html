@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enseignements Complémentaires — Choix du niveau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .niveaux-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+    .niveau-card {
+      display: block;
+      text-decoration: none;
+      text-align: center;
+      padding: 2rem 1rem;
+      border-radius: var(--radius);
+      background: var(--white);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: border-color .18s ease, transform .18s ease;
+    }
+    .niveau-card:hover { border-color: var(--navy); transform: translateY(-2px); }
+    .niveau-code {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .niveau-sub { font-size: .8rem; color: var(--text-muted); margin-top: .3rem; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-eyebrow">Université — Enseignements complémentaires</div>
+      <h1 class="header-title">Choisissez votre <em>niveau</em></h1>
+      <p class="header-sub">Sélectionnez le niveau correspondant à votre inscription.</p>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="form-section">
+      <div class="niveaux-grid" id="niveaux-grid"><!-- peuplé par JS --></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="dashboard.html" class="footer-link">Tableau de bord (administration) →</a>
+  </footer>
+
+  <script type="module">
+    import { NIVEAUX } from "./config.js";
+    import { urlPourNiveau } from "./niveau.js";
+
+    const grid = document.getElementById("niveaux-grid");
+    Object.keys(NIVEAUX).forEach(niveau => {
+      const a = document.createElement("a");
+      a.className = "niveau-card";
+      a.href = urlPourNiveau(niveau, "index.html");
+      a.innerHTML = `<div class="niveau-code">${niveau}</div><div class="niveau-sub">Voir les ateliers</div>`;
+      grid.appendChild(a);
+    });
+  </script>
+</body>
+</html>
