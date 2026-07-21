@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Enseignements Complémentaires — Inscription</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-eyebrow">Université — Enseignements complémentaires</div>
+      <h1 class="header-title">Inscription — Niveau <em id="niveau-titre">…</em></h1>
+      <p class="header-sub">Choisissez exactement 2 ateliers parmi ceux disponibles.</p>
+      <a href="niveaux.html" class="header-back">← Changer de niveau</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Step 1: Student info -->
+    <section class="form-section" id="section-identity">
+      <div class="section-label">Étape 1 — Votre identité</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <label for="input-prenom">Prénom <span class="required">*</span></label>
+          <input type="text" id="input-prenom" placeholder="Votre prénom" autocomplete="given-name" />
+        </div>
+        <div class="field-group">
+          <label for="input-nom">Nom <span class="required">*</span></label>
+          <input type="text" id="input-nom" placeholder="Votre nom" autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:1rem;">
+        <label for="input-email">Email universitaire <span class="required">*</span></label>
+        <input type="email" id="input-email" placeholder="prenom.nom@univ.fr" autocomplete="email" />
+      </div>
+    </section>
+
+    <!-- Step 2: Atelier selection -->
+    <section class="form-section" id="section-ateliers">
+      <div class="section-label">Étape 2 — Choisissez vos 2 ateliers</div>
+      <div class="selection-counter" id="selection-counter">
+        <span class="counter-num" id="counter-num">0</span><span class="counter-slash">/2</span>
+        <span class="counter-label">ateliers sélectionnés</span>
+      </div>
+      <div class="ateliers-grid" id="ateliers-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="error-banner hidden" id="error-max">
+        ⚠ Vous avez déjà sélectionné 2 ateliers. Décochez-en un avant d'en choisir un autre.
+      </div>
+    </section>
+
+    <!-- Submit -->
+    <section class="form-section submit-section">
+      <button class="btn-submit" id="btn-submit" disabled>
+        Confirmer mon inscription
+      </button>
+      <p class="submit-hint">Les champs marqués <span class="required">*</span> sont obligatoires.</p>
+    </section>
+
+    <!-- Confirmation -->
+    <div class="confirmation-overlay hidden" id="confirmation-overlay">
+      <div class="confirmation-card">
+        <div class="confirm-icon">✓</div>
+        <h2>Inscription confirmée !</h2>
+        <p id="confirm-name"></p>
+        <ul id="confirm-ateliers"></ul>
+        <button class="btn-secondary" id="btn-new-inscription">Nouvelle inscription</button>
+        <a href="dashboard.html" class="btn-dashboard-link">Voir le tableau de bord →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <a href="dashboard.html" class="footer-link">Tableau de bord (administration) →</a>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
