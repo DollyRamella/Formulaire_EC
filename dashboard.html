@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord — Enseignements Complémentaires</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body class="dashboard-body">
+
+  <header class="site-header compact">
+    <div class="header-inner">
+      <div class="header-eyebrow">Administration</div>
+      <h1 class="header-title">Tableau de <em>bord</em></h1>
+      <a href="niveaux.html" class="header-back">← Formulaire d'inscription</a>
+      <button class="header-back" id="btn-logout" style="background:none;border:none;cursor:pointer;margin-left:1rem;">Se déconnecter</button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+
+    <!-- ── Sélecteur de niveau ──────────────────────────────────────────── -->
+    <section class="niveau-tabs" id="niveau-tabs">
+      <!-- peuplé par JS : bouton "Tous les niveaux" + un onglet par niveau -->
+    </section>
+
+    <!-- ── Cartes résumé ─────────────────────────────────────────────────── -->
+    <section class="dash-summary" id="dash-summary">
+      <div class="summary-card">
+        <div class="summary-num" id="total-inscrits">—</div>
+        <div class="summary-label">inscrits au total</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="total-full">—</div>
+        <div class="summary-label">ateliers complets</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="total-places">—</div>
+        <div class="summary-label">places restantes</div>
+      </div>
+    </section>
+
+    <!-- ── Vue agrégée par niveau (visible seulement en mode "Tous les niveaux") -->
+    <section class="dash-exports" id="niveaux-summary-section">
+      <h2 class="dash-section-title">Répartition par niveau</h2>
+      <div class="niveaux-summary-grid" id="niveaux-summary-grid"></div>
+    </section>
+
+    <!-- ── Gestion des jauges (visible seulement pour un niveau sélectionné) -->
+    <section class="dash-gauges hidden" id="section-gauges">
+      <h2 class="dash-section-title">Gestion des capacités</h2>
+      <p class="gauge-mgmt-intro">
+        Modifiez la capacité maximale de chaque atelier en temps réel. Le formulaire d'inscription
+        se met à jour instantanément. La capacité ne peut pas descendre en dessous du nombre
+        d'inscrits actuels.
+      </p>
+      <div class="gauge-grid" id="gauge-grid"></div>
+    </section>
+
+    <!-- ── Exports ────────────────────────────────────────────────────────── -->
+    <section class="dash-exports hidden" id="section-exports">
+      <h2 class="dash-section-title">Exports</h2>
+      <div class="export-buttons">
+        <button class="btn-export" id="btn-export-all">
+          ⬇ Exporter tous les inscrits du niveau (CSV)
+        </button>
+        <div class="export-sep">ou par atelier :</div>
+        <div class="export-atelier-btns" id="export-atelier-btns"></div>
+      </div>
+    </section>
+
+    <!-- ── Listes par atelier ─────────────────────────────────────────────── -->
+    <section class="dash-tables hidden" id="section-tables">
+      <h2 class="dash-section-title">Liste par atelier</h2>
+      <div id="atelier-tables-wrap"></div>
+    </section>
+
+  </main>
+
+  <!-- Toast global -->
+  <div class="toast-notif" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
