@@ -1,0 +1,46 @@
+{
+  "rules": {
+    "levels": {
+      "$niveau": {
+        ".validate": "$niveau === 'A1' || $niveau === 'A2' || $niveau === 'B1' || $niveau === 'B2' || $niveau === 'C1' || $niveau === 'C2'",
+
+        "counts": {
+          ".read": true,
+          ".write": true,
+          "$atelierKey": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        },
+
+        "capacities": {
+          ".read": true,
+          ".write": true,
+          "$atelierKey": {
+            ".validate": "newData.isNumber() && newData.val() >= 1"
+          }
+        },
+
+        "emailsInscrits": {
+          ".read": true,
+          "$emailKey": {
+            ".write": "!data.exists() || newData.val() == null",
+            ".validate": "newData.hasChildren(['email','timestamp'])"
+          }
+        },
+
+        "inscriptions": {
+          ".read": true,
+          ".write": true,
+          "$inscriptionId": {
+            ".validate": "newData.hasChildren(['prenom','nom','email','ateliers','timestamp'])",
+            "prenom": { ".validate": "newData.isString() && newData.val().length > 0" },
+            "nom": { ".validate": "newData.isString() && newData.val().length > 0" },
+            "email": { ".validate": "newData.isString() && newData.val().matches(/^[^@]+@[^@]+\\..+$/)" },
+            "ateliers": { ".validate": "newData.hasChildren()" },
+            "timestamp": { ".validate": "newData.isNumber()" }
+          }
+        }
+      }
+    }
+  }
+}
