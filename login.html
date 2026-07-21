@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <style>
+    .login-wrap {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    }
+    .login-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .login-card .field-group { margin-bottom: 1rem; }
+    .login-card label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      margin-bottom: .35rem;
+    }
+    .login-card input {
+      width: 100%;
+      padding: .6rem .85rem;
+      border: 1px solid var(--border, #d1d5db);
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
+    }
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--accent, #4f46e5);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+    }
+    .login-error {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: 6px;
+      padding: .65rem .85rem;
+      font-size: .875rem;
+      margin-bottom: 1rem;
+    }
+    .btn-login {
+      width: 100%;
+      padding: .75rem;
+      background: var(--accent, #4f46e5);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      margin-top: .5rem;
+    }
+    .btn-login:hover { background: #4338ca; }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+  </style>
+</head>
+<body class="dashboard-body">
+
+  <header class="site-header compact">
+    <div class="header-inner">
+      <div class="header-eyebrow">Enseignements complémentaires</div>
+      <h1 class="header-title">Administration</h1>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <div class="login-wrap">
+      <div class="login-card">
+        <h2>Connexion</h2>
+        <div class="login-error" id="login-error">
+          ⚠ Identifiants incorrects. Veuillez réessayer.
+        </div>
+        <div class="field-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" autocomplete="username" placeholder="admin@univ.fr" />
+        </div>
+        <div class="field-group">
+          <label for="login-password">Mot de passe</label>
+          <input type="password" id="login-password" autocomplete="current-password" />
+        </div>
+        <button class="btn-login" id="btn-login">Se connecter</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { login, auth } from "./auth.js";
+    import { onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.replace("dashboard.html");
+    });
+
+    const btn = document.getElementById("btn-login");
+    const errBox = document.getElementById("login-error");
+
+    async function doLogin() {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      if (!email || !password) return;
+
+      errBox.style.display = "none";
+      btn.disabled = true;
+      btn.textContent = "Connexion…";
+
+      try {
+        await login(email, password);
+        window.location.replace("dashboard.html");
+      } catch (err) {
+        console.error(err);
+        errBox.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Se connecter";
+      }
+    }
+
+    btn.addEventListener("click", doLogin);
+    document.getElementById("login-password")
+      .addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  </script>
+
+</body>
+</html>
