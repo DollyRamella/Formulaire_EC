@@ -1,4 +1,4 @@
-// app.js — logique du formulaire d'inscription, paramétrée par niveau
+// app.js — logique du formulaire d'inscription, paramétrée par nivea
 import { ref, onValue, push, runTransaction, set, remove }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { NIVEAUX } from "./config.js";
