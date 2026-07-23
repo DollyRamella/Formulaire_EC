@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title id="page-title">Enseignements Complémentaires — Inscription</title>
+  <title id="page-title">Enseignements Complémentaires — Inscriptions aux EC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -13,7 +13,7 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="header-eyebrow">Nantes Université — Enseignements complémentaires</div>
-      <h1 class="header-title">Inscription — Niveau <em id="niveau-titre">…</em></h1>
+      <h1 class="header-title">Inscription aux EC — Niveau <em id="niveau-titre">…</em></h1>
       <p class="header-sub">Choisissez 2 cours de la liste.</p>
       <a href="niveaux.html" class="header-back">← Changer de niveau</a>
     </div>
@@ -34,23 +34,23 @@
         </div>
       </div>
       <div class="field-group" style="margin-top:1rem;">
-        <label for="input-email">Email universitaire <span class="required">*</span></label>
-        <input type="email" id="input-email" placeholder="prenom.nom@univ.fr" autocomplete="email" />
+        <label for="input-email">Mail<span class="required">*</span></label>
+        <input type="email" id="input-email" placeholder="prenom.nom@gmail.com" autocomplete="email" />
       </div>
     </section>
 
     <!-- Step 2: Atelier selection -->
     <section class="form-section" id="section-ateliers">
-      <div class="section-label">Étape 2 — Choisissez vos 2 ateliers</div>
+      <div class="section-label">Étape 2 — Choisissez vos 2 EC</div>
       <div class="selection-counter" id="selection-counter">
         <span class="counter-num" id="counter-num">0</span><span class="counter-slash">/2</span>
-        <span class="counter-label">ateliers sélectionnés</span>
+        <span class="counter-label">EC sélectionnés</span>
       </div>
       <div class="ateliers-grid" id="ateliers-grid">
         <!-- Populated by JS -->
       </div>
       <div class="error-banner hidden" id="error-max">
-        ⚠ Vous avez déjà sélectionné 2 ateliers. Décochez-en un avant d'en choisir un autre.
+        ⚠ Vous avez déjà sélectionné 2 EC. Décochez-en un avant d'en choisir un autre.
       </div>
     </section>
 
